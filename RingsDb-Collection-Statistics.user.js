@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDb Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      1
 // @description  Generate information (table and graphs) about your collection informed at RingsDb.com.
 // @author       Danilo
 // @copyright    2020, Danilo
