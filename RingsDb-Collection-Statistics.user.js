@@ -4,8 +4,10 @@
 // @version      1
 // @description  Generate information (table and graphs) about your collection informed at RingsDb.com.
 // @author       Danilo
-// @copyright    2020, Danilo
+// @copyright    2020, Danilo (https://github.com/danilopatro)
 // @license      Apache-2.0
+// @homepage     https://github.com/danilopatro/RingsDb-Collection-Statistics
+// @supportURL   https://github.com/danilopatro/RingsDb-Collection-Statistics/issues
 // @match        *://www.ringsdb.com/collection/*
 // @match        *://ringsdb.com/collection/*
 // @grant        GM_getResourceText
