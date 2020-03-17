@@ -1,14 +1,14 @@
 // ==UserScript==
-// @name         RingsDb Collection Statistics
+// @name         RingsDB Collection Statistics
 // @namespace    http://tampermonkey.net/
 // @version      2
 // @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
 // @license      Apache-2.0
-// @homepage     https://github.com/danilopatro/RingsDb-Collection-Statistics
-// @supportURL   https://github.com/danilopatro/RingsDb-Collection-Statistics/issues
-// @icon         https://raw.githubusercontent.com/danilopatro/RingsDb-Collection-Statistics/master/icon-192.ico
+// @homepage     https://github.com/danilopatro/RingsDB-Collection-Statistics
+// @supportURL   https://github.com/danilopatro/RingsDB-Collection-Statistics/issues
+// @icon         https://raw.githubusercontent.com/danilopatro/RingsDB-Collection-Statistics/master/icon-192.ico
 // @match        *://www.ringsdb.com/collection/*
 // @match        *://ringsdb.com/collection/*
 // @grant        GM_getResourceText
