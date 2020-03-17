@@ -2,7 +2,7 @@
 // @name         RingsDb Collection Statistics
 // @namespace    http://tampermonkey.net/
 // @version      2
-// @description  Generate information (table and graphs) about your collection informed at RingsDb.com.
+// @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
 // @license      Apache-2.0
