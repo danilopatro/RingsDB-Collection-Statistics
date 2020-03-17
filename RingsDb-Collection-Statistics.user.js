@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDb Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1
+// @version      2
 // @description  Generate information (table and graphs) about your collection informed at RingsDb.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
@@ -97,7 +97,7 @@ var getHTML = function ( url, callback ) {
 function criaDIV(stringCollection){
     var html_corpo = " \
 <TABLE class='table_cards'>"+generateTable(Sphere_Quantity_unique, Sphere_Quantity)+"</TABLE> \
-<br><button style='padding: 4px;' onclick=\"$(\'#base\').toggle()\">Show/Hide Charts</button><br> \
+<br><button style='padding: 4px;' onclick=\"$(\'#base\').toggle()\">Show/Hide Charts</button><br><br> \
 <div id='base' > \
 <TABLE class='table_canvas'> \
 <TR> \
@@ -143,11 +143,11 @@ function inputSearchString () {
         console.log("No code loaded.");
     else {
         $(criaDIV(" e:"+Collection_codes.join("|"))).insertBefore($("#owned_packs form"));
-        geraChart(Sphere_Quantity, 'Spheres', 'sphere', 'bar', Sphere_Quantity_unique);
-        geraChart(Sphere_Quantity, 'Spheres', 'spherePie', 'pie', Sphere_Quantity_unique);
-        geraChart(Type_Quantity, 'Types', 'type', 'bar', Type_Quantity_unique);
-        geraChart(Type_Quantity, 'Types', 'typePie', 'pie', Type_Quantity_unique);
-        geraChart(Packs_Quantity, 'Packs', 'pack', 'bar', Packs_Quantity_unique);
+        geraChart(Sphere_Quantity, 'All cards', 'sphere', 'bar', Sphere_Quantity_unique, 'Distinct cards');
+        geraChart(Sphere_Quantity, 'All cards', 'spherePie', 'pie', Sphere_Quantity_unique, 'Distinct cards');
+        geraChart(Type_Quantity, 'All cards', 'type', 'bar', Type_Quantity_unique, 'Distinct cards');
+        geraChart(Type_Quantity, 'All cards', 'typePie', 'pie', Type_Quantity_unique, 'Distinct cards');
+        geraChart(Packs_Quantity, 'All cards', 'pack', 'bar', Packs_Quantity_unique, 'Distinct cards');
     }
 }
 
@@ -236,15 +236,15 @@ function numberWithPoints(x) {
 }
 
 function hideShow(element) {
-  var x = document.getElementById(element);
-  if (x.style.display === "none") {
-    x.style.display = "block";
-  } else {
-    x.style.display = "none";
-  }
+    var x = document.getElementById(element);
+    if (x.style.display === "none") {
+        x.style.display = "block";
+    } else {
+        x.style.display = "none";
+    }
 }
 
-function generateTable(data, data2, headers = ['Esfera','Nº de cartas diferentes','Quantidade de cartas' ]) {
+function generateTable(data, data2, headers = ['Sphere','Number of distinct cards','Total number of cards' ]) {
     var html = '<tr>\r\n<th nowrap>' + headers[0] + '</th><th nowrap>' + headers[1] + '</th><th nowrap>'+ headers[2] + '</th></tr>\r\n';
     var data_labels = Object.getOwnPropertyNames(data);
     var n_cards = 0;
@@ -285,7 +285,7 @@ Object.size = function(obj) {
 
 loadCards(loadSets);
 
-function geraChart(info, name, canvas, type = 'bar', info2 = info) {
+function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name) {
     var labels_info = Object.getOwnPropertyNames(info);
     labels_info.shift();
     var values_info = Object.values(info);
@@ -304,20 +304,34 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info) {
             },
             borderWidth: type == 'pie' ? 2 : 0,
             borderColor: "#fff",
+            borderAlign: 'inner',
             data: values_info,
+            order: 2,
         }, {
-            label: name,
+            label: name2,
             backgroundColor: function(context) {
                 var index = context.dataIndex;
                 var value = context.dataset.data[index];
                 return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
                 Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
                 labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Type graph
-                'green';
+                false;
             },
             borderWidth: type == 'pie' ? 2 : 0,
             borderColor: "#fff",
+            borderAlign: 'inner',
             data: values_info2,
+            type: type == 'bar' ? 'line' : type,
+            fill: type == 'bar' ? false : true,
+            showLine: false,
+            lineTension: 0,
+            pointStyle: 'circle',
+            pointradius: 5,
+            pointHoverRadius: 15,
+            pointBorderWidth: 1,
+            pointHoverBorderWidth: 2,
+            pointBorderColor: "#fff",
+            order: 1,
         }
                   ]
     };
@@ -328,11 +342,18 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info) {
         options: {
             responsive: true,
             legend: {
-                display: false,
-                position: 'top',
+                display: type == 'bar' ? false : true,
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                },
+            },
+            tooltips: {
+                mode: type == 'pie' ? 'dataset' : 'index',
+                intersect: true,
             },
             title: {
-                display: true,
+                display: false,
                 text: name+' Chart'
             },
             plugins: {
@@ -342,11 +363,11 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info) {
                     display: 'auto',
                     formatter: (value, ctx) => {
                         let sum = 0;
-                        let dataArr = ctx.chart.data.datasets[0].data;
+                        let dataArr = ctx.chart.data.datasets[ctx.datasetIndex].data;
                         dataArr.map(data => {
                             sum += data;
                         });
-                        let percentage = type == 'pie' ? (value*100 / sum).toFixed(2)+"%" : value;
+                        let percentage = type == 'pie' ? (value*100 / sum).toFixed(1)+"%" : value;
                         return percentage;
                     },
                     color: '#fff',
