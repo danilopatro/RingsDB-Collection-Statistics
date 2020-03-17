@@ -5,4 +5,4 @@ This script generate a table and graphs informed at https://www.ringsdb.com/coll
 
 To run this script you need to use an Userscript Manager (https://en.wikipedia.org/wiki/Userscript_manager), like Tampermonkey.
 
-You can access through the OpenUserJS also: https://openuserjs.org/scripts/danilopatro/RingsDb_Collection_Statistics
+You can access through the OpenUserJS also: https://openuserjs.org/scripts/danilopatro/RingsDB_Collection_Statistics
