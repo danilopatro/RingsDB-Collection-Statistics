@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDB Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2
+// @version      3
 // @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
@@ -48,17 +48,17 @@ var Sphere_symbols = {Tactics: '<span class="icon icon-tactics fg-tactics"></spa
                       Baggins: '<span class="icon icon-baggins fg-baggins"></span>',
                       Fellowship: '<span class="icon icon-fellowship fg-fellowship"></span>'};
 
-var Type_colors = {Hero: '#E31A1C', Ally: '#1F78B4', Event: '#6A3D9A', Attachment: '#33A02C', 'Player Side Quest': '#F0027F', Treasure: '#FF7F00'};
+var Type_colors = {Hero: '#dc9336', Ally: '#b15553', Event: '#509aaf', Attachment: '#77ad52', 'Player Side Quest': '#878a75', Treasure: '#c4c23b'};
 
 
 var newCSS = GM_getResourceText ("jqueryCSS");
 GM_addStyle (newCSS);
 GM_addStyle("#base {  width: 100%; height: 100%; display: none; }");
-GM_addStyle(".table_canvas {  width: 100%; }");
+GM_addStyle(".table_canvas {  width: 100%; border-collapse:separate; border-spacing: 10px 15px; }");
 GM_addStyle(".table_canvas td {  width: 50%; }");
 GM_addStyle(".table_cards {  width: 100%; text-align: center; border-collapse:separate; border: 1px solid #DDD; -webkit-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); -moz-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); }");
 GM_addStyle(".table_cards th {  padding: 5px; text-align: center; background-color: #eee; width: 33%; }");
-GM_addStyle(".table_cards td {  padding: 5px; width: 33%; }");
+GM_addStyle(".table_cards td {  padding: 5px; padding-top: 15px; width: 33%; }");
 GM_addStyle(".table_cards td:first-child {  text-align: left; padding-left: 10%; }");
 GM_addStyle(".table_cards tr:nth-child(odd) {  background-color: #f5f5f5; }");
 GM_addStyle(".table_cards tr:last-child {  background-color: #eee; }");
@@ -342,7 +342,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name)
         options: {
             responsive: true,
             legend: {
-                display: type == 'bar' ? false : true,
+                display: false,
                 position: 'bottom',
                 labels: {
                     usePointStyle: true,
@@ -361,13 +361,13 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name)
                     anchor: type == 'pie' ? 'center' : 'end',
                     align: 'bottom',
                     display: 'auto',
-                    formatter: (value, ctx) => {
+                    formatter: (value, ctx, label) => {
                         let sum = 0;
                         let dataArr = ctx.chart.data.datasets[ctx.datasetIndex].data;
                         dataArr.map(data => {
                             sum += data;
                         });
-                        let percentage = type == 'pie' ? (value*100 / sum).toFixed(1)+"%" : value;
+                        let percentage = type == 'pie' ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" : value;
                         return percentage;
                     },
                     color: '#fff',
