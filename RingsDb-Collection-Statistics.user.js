@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDB Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      3
+// @version      4
 // @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
@@ -32,12 +32,19 @@ var Collection = new Array();
 var Collection_codes = new Array();
 var Cards_Collection = new Array();
 var Cards_Quantity = 0;
+var Cards_Quantity_total = 0;
 var Packs_Quantity = new Array();
+var Packs_Quantity_total = new Array();
 var Packs_Quantity_unique = new Array();
+var Packs_Quantity_unique_total = new Array();
 var Sphere_Quantity = new Array();
+var Sphere_Quantity_total = new Array();
 var Sphere_Quantity_unique = new Array();
+var Sphere_Quantity_unique_total = new Array();
 var Type_Quantity = new Array();
+var Type_Quantity_total = new Array();
 var Type_Quantity_unique = new Array();
+var Type_Quantity_unique_total = new Array();
 
 var Sphere_colors = {Tactics: '#ED2E30', Spirit: '#00B1D4', Leadership: '#AD62A5', Lore: '#51B848', Neutral: '#616161', Baggins: '#B39E26', Fellowship: '#B56C0C'};
 var Sphere_symbols = {Tactics: '<span class="icon icon-tactics fg-tactics"></span>',
@@ -53,12 +60,13 @@ var Type_colors = {Hero: '#dc9336', Ally: '#b15553', Event: '#509aaf', Attachmen
 
 var newCSS = GM_getResourceText ("jqueryCSS");
 GM_addStyle (newCSS);
-GM_addStyle("#base {  width: 100%; height: 100%; display: none; }");
+GM_addStyle("#base {  width: 100%; height: 100%; display: block; }");
 GM_addStyle(".table_canvas {  width: 100%; border-collapse:separate; border-spacing: 10px 15px; }");
 GM_addStyle(".table_canvas td {  width: 50%; }");
+GM_addStyle(".table_canvas th {  padding: 5px; text-align: center; font-size: 15px; background-color: #eee; width: 33%; ; border-collapse:separate; border: 1px solid #DDD; -webkit-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); -moz-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75);}");
 GM_addStyle(".table_cards {  width: 100%; text-align: center; border-collapse:separate; border: 1px solid #DDD; -webkit-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); -moz-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); }");
 GM_addStyle(".table_cards th {  padding: 5px; text-align: center; background-color: #eee; width: 33%; }");
-GM_addStyle(".table_cards td {  padding: 5px; padding-top: 15px; width: 33%; }");
+GM_addStyle(".table_cards td {  padding: 5px; width: 33%; }");
 GM_addStyle(".table_cards td:first-child {  text-align: left; padding-left: 10%; }");
 GM_addStyle(".table_cards tr:nth-child(odd) {  background-color: #f5f5f5; }");
 GM_addStyle(".table_cards tr:last-child {  background-color: #eee; }");
@@ -101,13 +109,20 @@ function criaDIV(stringCollection){
 <div id='base' > \
 <TABLE class='table_canvas'> \
 <TR> \
+<TH COLSPAN='2'>Graphs by Sphere</TH>\
+</TR> <TR> \
 <TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='sphere'> </canvas > </TD>\
 <TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='spherePie'> </canvas > </TD>\
+</TR> <TR> \
+<TH COLSPAN='2'>Graphs by Type</TH>\
 </TR> <TR> \
 <TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='type'> </canvas > </TD>\
 <TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='typePie'> </canvas > </TD>\
 </TR> <TR> \
-<TD COLSPAN=2> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='pack'> </canvas > </TD>\
+<TH COLSPAN='2'>Status of the Collection</TH>\
+</TR> <TR> \
+<TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='spherePolar'> </canvas > </TD>\
+<TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='typePie'> </canvas > </TD>\
 </TR> \
 </TABLE> \
 </div>";
@@ -147,7 +162,7 @@ function inputSearchString () {
         geraChart(Sphere_Quantity, 'All cards', 'spherePie', 'pie', Sphere_Quantity_unique, 'Distinct cards');
         geraChart(Type_Quantity, 'All cards', 'type', 'bar', Type_Quantity_unique, 'Distinct cards');
         geraChart(Type_Quantity, 'All cards', 'typePie', 'pie', Type_Quantity_unique, 'Distinct cards');
-        geraChart(Packs_Quantity, 'All cards', 'pack', 'bar', Packs_Quantity_unique, 'Distinct cards');
+        geraChart(Sphere_Quantity_unique, 'Distinct cards', 'spherePolar', 'polarArea', new Array(), '', Sphere_Quantity_unique_total);
     }
 }
 
@@ -185,7 +200,13 @@ function loadSets (callback) {
 
 function filterCards () {
     for(var i = 0; i < Cards.length; i++) {
-        //console.log("Cards[i].pack_name: " + Cards[i].pack_name +"\n Collection.includes(Cards[i].pack_name): " + Collection.includes(Cards[i].pack_name));
+        Cards_Quantity_total += Cards[i].quantity;
+        Packs_Quantity_total[Cards[i].pack_name] = isNaN(Packs_Quantity_total[Cards[i].pack_name]) ? Cards[i].quantity : Packs_Quantity_total[Cards[i].pack_name] + Cards[i].quantity;
+        Packs_Quantity_unique_total[Cards[i].pack_name] = isNaN(Packs_Quantity_unique_total[Cards[i].pack_name]) ? 1 : Packs_Quantity_unique_total[Cards[i].pack_name] + 1;
+        Sphere_Quantity_total[Cards[i].sphere_name] = isNaN(Sphere_Quantity_total[Cards[i].sphere_name]) ? Cards[i].quantity : Sphere_Quantity_total[Cards[i].sphere_name] + Cards[i].quantity;
+        Sphere_Quantity_unique_total[Cards[i].sphere_name] = isNaN(Sphere_Quantity_unique_total[Cards[i].sphere_name]) ? 1 : Sphere_Quantity_unique_total[Cards[i].sphere_name] + 1;
+        Type_Quantity_total[Cards[i].type_name] = isNaN(Type_Quantity_total[Cards[i].type_name]) ? Cards[i].quantity : Type_Quantity_total[Cards[i].type_name] + Cards[i].quantity;
+        Type_Quantity_unique_total[Cards[i].type_name] = isNaN(Type_Quantity_unique_total[Cards[i].type_name]) ? 1 : Type_Quantity_unique_total[Cards[i].type_name] + 1;
         if(Collection.includes(Cards[i].pack_name)) {
             Cards_Collection.push([Cards[i].pack_name,
                                    Cards[i].sphere_name,
@@ -274,6 +295,16 @@ function returnSymbol(sphere) {
     return Sphere_symbols[sphere] + " " + sphere;
 }
 
+function divideArrays(A1, A2) {
+    var temp = new Array();
+    var kA1 = Object.getOwnPropertyNames(A1);
+    kA1.shift();
+    for (var x = 0; x < kA1.length; x++) {
+        temp[kA1[x]] = A1[kA1[x]]/A2[kA1[x]];
+    }
+    return temp;
+}
+
 // @source https://stackoverflow.com/questions/5223/length-of-a-javascript-object
 Object.size = function(obj) {
     var size = 0, key;
@@ -285,94 +316,160 @@ Object.size = function(obj) {
 
 loadCards(loadSets);
 
-function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name) {
+function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name, info_tot = info, info2_tot = info2) {
     var labels_info = Object.getOwnPropertyNames(info);
     labels_info.shift();
-    var values_info = Object.values(info);
-    var values_info2 = Object.values(info2);
+    var values_info = canvas == 'spherePolar' ? Object.values(divideArrays(info,info_tot)) : Object.values(info);
+    var values_info2 = canvas == 'spherePolar' ? values_info2 = Object.values(divideArrays(info2,info2_tot)) : Object.values(info2);
+    var data1 = {
+        label: name,
+        backgroundColor: function(context) {
+            var index = context.dataIndex;
+            var value = context.dataset.data[index];
+            return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
+            Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
+            labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Type graph
+            'rgb(255,0,0,.25)';
+        },
+        borderWidth: ['pie', 'polarArea'].indexOf(type) > -1 ? 2 : 0,
+        borderColor: "#fff",
+        borderAlign: 'inner',
+        data: values_info,
+        order: 2,
+    };
+    var data2 = {
+        label: name2,
+        backgroundColor: function(context) {
+            var index = context.dataIndex;
+            var value = context.dataset.data[index];
+            return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
+            Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
+            labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Type graph
+            'rgb(0,0,255,.25)';
+        },
+        borderWidth: ['pie', 'polarArea'].indexOf(type) > -1 ? 2 : 0,
+        borderColor: "#fff",
+        borderAlign: 'inner',
+        data: values_info2,
+        type: type == 'bar' ? 'line' : type,
+        fill: type == 'bar' ? false : true,
+        showLine: false,
+        lineTension: 0,
+        pointStyle: 'circle',
+        pointradius: 5,
+        pointHoverRadius: 15,
+        pointBorderWidth: 1,
+        pointHoverBorderWidth: 2,
+        pointBorderColor: "#fff",
+        order: 1,
+    };
     var barChartData = {
         labels: labels_info,
-        datasets: [{
-            label: name,
-            backgroundColor: function(context) {
-                var index = context.dataIndex;
-                var value = context.dataset.data[index];
-                return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
-                Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
-                labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Type graph
-                'green';
-            },
-            borderWidth: type == 'pie' ? 2 : 0,
-            borderColor: "#fff",
-            borderAlign: 'inner',
-            data: values_info,
-            order: 2,
-        }, {
-            label: name2,
-            backgroundColor: function(context) {
-                var index = context.dataIndex;
-                var value = context.dataset.data[index];
-                return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
-                Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
-                labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Type graph
-                false;
-            },
-            borderWidth: type == 'pie' ? 2 : 0,
-            borderColor: "#fff",
-            borderAlign: 'inner',
-            data: values_info2,
-            type: type == 'bar' ? 'line' : type,
-            fill: type == 'bar' ? false : true,
-            showLine: false,
-            lineTension: 0,
-            pointStyle: 'circle',
-            pointradius: 5,
-            pointHoverRadius: 15,
-            pointBorderWidth: 1,
-            pointHoverBorderWidth: 2,
-            pointBorderColor: "#fff",
-            order: 1,
-        }
-                  ]
+        datasets: isNaN(info2) ? [ data1 ] : [ data1, data2 ],
     };
     var ctx = document.getElementById(canvas).getContext('2d');
+    var defaultOptions = {
+        responsive: true,
+        legend: {
+            display: false,
+            position: 'bottom',
+            labels: {
+                usePointStyle: true,
+            },
+        },
+        tooltips: {
+            mode: type == 'pie' ? 'dataset' : 'index',
+            intersect: true,
+            position: type == 'pie' ? 'nearest' : 'average',
+        },
+        title: {
+            display: false,
+            text: name+' Chart'
+        },
+        plugins: {
+            datalabels: {
+                anchor: type == 'pie' ? 'center' : 'end',
+                align: 'bottom',
+                display: 'auto',
+                formatter: (value, ctx) => {
+                    let sum = 0;
+                    let dataArr = ctx.chart.data.datasets[ctx.datasetIndex].data;
+                    dataArr.map(data => {
+                        sum += data;
+                    });
+                    let percentage = type == 'pie' ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" : value;
+                    return percentage;
+                },
+                color: '#fff',
+            }
+        },
+    };
+    var polarOptions = {
+        responsive: true,
+        legend: {
+            display: true,
+            position: 'right',
+            labels: {
+                usePointStyle: true,
+            },
+            onClick: null,
+        },
+        tooltips: {
+            mode: type == 'pie' ? 'dataset' : 'index',
+            intersect: true,
+            position: type == 'pie' ? 'nearest' : 'average',
+            callbacks: {
+                label: function(tooltipItem, data) {
+                    var label = data.labels[tooltipItem.datasetIndex] || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    label += (tooltipItem.yLabel*100).toFixed(1)+"%";
+                    return label;
+                }
+            }
+        },
+        title: {
+            display: true,
+            text: 'Percent of '+name+' in the Collection in relation to those published by Sphere'
+        },
+        scale: {
+            angleLines: {
+            },
+            ticks: {
+                min: 0,
+                max: 1,
+                stepSize: 0.1,
+            },
+        },
+        plugins: {
+            datalabels: {
+                anchor: ['pie'].indexOf(type) > -1 ? 'center' :
+                ['polarArea'].indexOf(type) > -1 ? 'end' :
+                'end',
+                align: ['pie'].indexOf(type) > -1 ? 'bottom' :
+                ['polarArea'].indexOf(type) > -1 ? 'start' :
+                'bottom',
+                clamp: true,
+                display: 'auto',
+                formatter: (value, ctx) => {
+                    let sum = 0;
+                    let dataArr = ctx.chart.data.datasets[ctx.datasetIndex].data;
+                    dataArr.map(data => {
+                        sum += data;
+                    });
+                    let percentage = ['pie'].indexOf(type) > -1 ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" : // For Pie graph
+                    ['polarArea'].indexOf(type) > -1 ? (value*100).toFixed(1)+"%" :    // For Polar Area graph
+                    value;
+                    return percentage;
+                },
+                color: '#fff',
+            }
+        },
+    };
     var charBar = new Chart(ctx, {
         type: type,
         data: barChartData,
-        options: {
-            responsive: true,
-            legend: {
-                display: false,
-                position: 'bottom',
-                labels: {
-                    usePointStyle: true,
-                },
-            },
-            tooltips: {
-                mode: type == 'pie' ? 'dataset' : 'index',
-                intersect: true,
-            },
-            title: {
-                display: false,
-                text: name+' Chart'
-            },
-            plugins: {
-                datalabels: {
-                    anchor: type == 'pie' ? 'center' : 'end',
-                    align: 'bottom',
-                    display: 'auto',
-                    formatter: (value, ctx, label) => {
-                        let sum = 0;
-                        let dataArr = ctx.chart.data.datasets[ctx.datasetIndex].data;
-                        dataArr.map(data => {
-                            sum += data;
-                        });
-                        let percentage = type == 'pie' ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" : value;
-                        return percentage;
-                    },
-                    color: '#fff',
-                }
-            }
-        }
+        options: type == 'polarArea' ? polarOptions : defaultOptions,
     });
 };
