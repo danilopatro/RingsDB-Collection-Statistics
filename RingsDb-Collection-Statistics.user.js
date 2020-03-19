@@ -60,7 +60,7 @@ var Type_colors = {Hero: '#dc9336', Ally: '#b15553', Event: '#509aaf', Attachmen
 
 var newCSS = GM_getResourceText ("jqueryCSS");
 GM_addStyle (newCSS);
-GM_addStyle("#base {  width: 100%; height: 100%; display: block; }");
+GM_addStyle("#base {  width: 100%; height: 100%; display: none; }");
 GM_addStyle(".table_canvas {  width: 100%; border-collapse:separate; border-spacing: 10px 15px; }");
 GM_addStyle(".table_canvas td {  width: 50%; }");
 GM_addStyle(".table_canvas th {  padding: 5px; text-align: center; font-size: 15px; background-color: #eee; width: 33%; ; border-collapse:separate; border: 1px solid #DDD; -webkit-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); -moz-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75);}");
