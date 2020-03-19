@@ -426,7 +426,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                     }
                     label += (tooltipItem.yLabel*100).toFixed(1)+"%";
                     return label;
-                }
+                },
             }
         },
         title: {
@@ -440,6 +440,9 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                 min: 0,
                 max: 1,
                 stepSize: 0.1,
+                callback: function(value, index, values) {
+                        return (value*100).toFixed(0)+"%";
+                    },
             },
         },
         plugins: {
