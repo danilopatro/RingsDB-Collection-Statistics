@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDB Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      5
+// @version      6
 // @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
@@ -33,6 +33,8 @@ var Collection_codes = new Array();
 var Cards_Collection = new Array();
 var Cards_Quantity = 0;
 var Cards_Quantity_total = 0;
+var Cards_Quantity_unique = 0;
+var Cards_Quantity_unique_total = 0;
 var Packs_Quantity = new Array();
 var Packs_Quantity_total = new Array();
 var Packs_Quantity_unique = new Array();
@@ -163,7 +165,7 @@ function inputSearchString () {
         geraChart(Type_Quantity, 'All cards', 'type', 'bar', Type_Quantity_unique, 'Distinct cards');
         geraChart(Type_Quantity, 'All cards', 'typePie', 'pie', Type_Quantity_unique, 'Distinct cards');
         geraChart(Sphere_Quantity_unique, 'Distinct cards', 'spherePolar', 'polarArea', new Array(), '', Sphere_Quantity_unique_total);
-        geraChart(Cards_Quantity_total, 'Total', 'total', 'bar', Cards_Quantity, '', new Array());
+        geraChart(Cards_Quantity_unique_total, 'Total', 'total', 'bar', Cards_Quantity_unique, '', new Array());
     }
 }
 
@@ -201,28 +203,35 @@ function loadSets (callback) {
 
 function filterCards () {
     for(var i = 0; i < Cards.length; i++) {
-        Cards_Quantity_total += Cards[i].quantity;
-        Packs_Quantity_total[Cards[i].pack_name] = isNaN(Packs_Quantity_total[Cards[i].pack_name]) ? Cards[i].quantity : Packs_Quantity_total[Cards[i].pack_name] + Cards[i].quantity;
+        Cards_Quantity_total += Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1;
+        Cards_Quantity_unique_total += 1;
+        Packs_Quantity_total[Cards[i].pack_name] = isNaN(Packs_Quantity_total[Cards[i].pack_name]) ? Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1 : Packs_Quantity_total[Cards[i].pack_name] + Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1;
         Packs_Quantity_unique_total[Cards[i].pack_name] = isNaN(Packs_Quantity_unique_total[Cards[i].pack_name]) ? 1 : Packs_Quantity_unique_total[Cards[i].pack_name] + 1;
-        Sphere_Quantity_total[Cards[i].sphere_name] = isNaN(Sphere_Quantity_total[Cards[i].sphere_name]) ? Cards[i].quantity : Sphere_Quantity_total[Cards[i].sphere_name] + Cards[i].quantity;
+        Sphere_Quantity_total[Cards[i].sphere_name] = isNaN(Sphere_Quantity_total[Cards[i].sphere_name]) ? Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1 : Sphere_Quantity_total[Cards[i].sphere_name] + Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1;
         Sphere_Quantity_unique_total[Cards[i].sphere_name] = isNaN(Sphere_Quantity_unique_total[Cards[i].sphere_name]) ? 1 : Sphere_Quantity_unique_total[Cards[i].sphere_name] + 1;
-        Type_Quantity_total[Cards[i].type_name] = isNaN(Type_Quantity_total[Cards[i].type_name]) ? Cards[i].quantity : Type_Quantity_total[Cards[i].type_name] + Cards[i].quantity;
+        Type_Quantity_total[Cards[i].type_name] = isNaN(Type_Quantity_total[Cards[i].type_name]) ? Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1 : Type_Quantity_total[Cards[i].type_name] + Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1;
         Type_Quantity_unique_total[Cards[i].type_name] = isNaN(Type_Quantity_unique_total[Cards[i].type_name]) ? 1 : Type_Quantity_unique_total[Cards[i].type_name] + 1;
         if(Collection.includes(Cards[i].pack_name)) {
             Cards_Collection.push([Cards[i].pack_name,
                                    Cards[i].sphere_name,
                                    Cards[i].type_name,
                                    Cards[i].quantity]);
-            Cards_Quantity += Cards[i].quantity;
-            Packs_Quantity[Cards[i].pack_name] = isNaN(Packs_Quantity[Cards[i].pack_name]) ? Cards[i].quantity : Packs_Quantity[Cards[i].pack_name] + Cards[i].quantity;
+            Cards_Quantity += Cards[i].quantity * Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1;
+            Cards_Quantity_unique += 1;
+            Packs_Quantity[Cards[i].pack_name] = isNaN(Packs_Quantity[Cards[i].pack_name]) ? Cards[i].quantity * (Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1) : Packs_Quantity[Cards[i].pack_name] + Cards[i].quantity * (Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1);
             Packs_Quantity_unique[Cards[i].pack_name] = isNaN(Packs_Quantity_unique[Cards[i].pack_name]) ? 1 : Packs_Quantity_unique[Cards[i].pack_name] + 1;
-            Sphere_Quantity[Cards[i].sphere_name] = isNaN(Sphere_Quantity[Cards[i].sphere_name]) ? Cards[i].quantity : Sphere_Quantity[Cards[i].sphere_name] + Cards[i].quantity;
+            Sphere_Quantity[Cards[i].sphere_name] = isNaN(Sphere_Quantity[Cards[i].sphere_name]) ? Cards[i].quantity * (Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1) : Sphere_Quantity[Cards[i].sphere_name] + Cards[i].quantity * (Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1);
             Sphere_Quantity_unique[Cards[i].sphere_name] = isNaN(Sphere_Quantity_unique[Cards[i].sphere_name]) ? 1 : Sphere_Quantity_unique[Cards[i].sphere_name] + 1;
-            Type_Quantity[Cards[i].type_name] = isNaN(Type_Quantity[Cards[i].type_name]) ? Cards[i].quantity : Type_Quantity[Cards[i].type_name] + Cards[i].quantity;
+            Type_Quantity[Cards[i].type_name] = isNaN(Type_Quantity[Cards[i].type_name]) ? Cards[i].quantity * (Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1) : Type_Quantity[Cards[i].type_name] + Cards[i].quantity * (Cards[i].pack_name == 'Core Set' ? multipleCoreSets(Collection) : 1);
             Type_Quantity_unique[Cards[i].type_name] = isNaN(Type_Quantity_unique[Cards[i].type_name]) ? 1 : Type_Quantity_unique[Cards[i].type_name] + 1;
 
         }
     }
+}
+
+function multipleCoreSets(CollectionLoaded) {
+    return CollectionLoaded.includes('3') ? 3 :
+            CollectionLoaded.includes('2') ? 2 : 1;
 }
 
 // @source https://stackoverflow.com/questions/1058427/how-to-detect-if-a-variable-is-an-array
@@ -523,9 +532,9 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                         sum += data;
                     });
                     let percentage = type == 'pie' ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" :
-                    canvas == 'total' ? value+" cards\n"+(value*100 / Cards_Quantity_total).toFixed(1)+"% of the total" :
+                    canvas == 'total' ? value+" cards\n"+(value*100 / Cards_Quantity_unique_total).toFixed(1)+"% of the total" :
                     value;
-                    percentage = value == Cards_Quantity_total ? value + ' cards published' : 'You own ' + value + " cards\n"+(value*100 / Cards_Quantity_total).toFixed(1)+"% of the total";
+                    percentage = value == Cards_Quantity_unique_total ? value + ' cards published' : 'You own ' + value + " cards\n"+(value*100 / Cards_Quantity_unique_total).toFixed(1)+"% of the total";
                     return percentage;
                 },
                 color: '#000',
