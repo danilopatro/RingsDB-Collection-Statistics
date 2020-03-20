@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDB Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      4
+// @version      5
 // @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
@@ -121,8 +121,8 @@ function criaDIV(stringCollection){
 </TR> <TR> \
 <TH COLSPAN='2'>Status of the Collection</TH>\
 </TR> <TR> \
+<TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='total'> </canvas > </TD>\
 <TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='spherePolar'> </canvas > </TD>\
-<TD> <canvas  width='"+graph_width+"' height='"+graph_height+"' id='typePie'> </canvas > </TD>\
 </TR> \
 </TABLE> \
 </div>";
@@ -163,6 +163,7 @@ function inputSearchString () {
         geraChart(Type_Quantity, 'All cards', 'type', 'bar', Type_Quantity_unique, 'Distinct cards');
         geraChart(Type_Quantity, 'All cards', 'typePie', 'pie', Type_Quantity_unique, 'Distinct cards');
         geraChart(Sphere_Quantity_unique, 'Distinct cards', 'spherePolar', 'polarArea', new Array(), '', Sphere_Quantity_unique_total);
+        geraChart(Cards_Quantity_total, 'Total', 'total', 'bar', Cards_Quantity, '', new Array());
     }
 }
 
@@ -285,7 +286,7 @@ function generateTable(data, data2, headers = ['Sphere','Number of distinct card
         q_cards += data2[row];
     }
     html += '<tr>\r\n';
-    html += '<td><b>TOTAL</b></td><td><b>' + numberWithPoints(n_cards) + '</b></td><td><b>' + numberWithPoints(q_cards) + '</b></td>\r\n';
+    html += '<td><b>TOTAL</b></td><td><b>' + n_cards + '</b></td><td><b>' + q_cards + '</b></td>\r\n';
     html += '</tr>\r\n';
     return html;
 }
@@ -317,28 +318,32 @@ Object.size = function(obj) {
 loadCards(loadSets);
 
 function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name, info_tot = info, info2_tot = info2) {
+    info = isArray(info) ? info : [info];
+    info2 = isArray(info2) ? info2 : [info2];
     var labels_info = Object.getOwnPropertyNames(info);
     labels_info.shift();
     var values_info = canvas == 'spherePolar' ? Object.values(divideArrays(info,info_tot)) : Object.values(info);
     var values_info2 = canvas == 'spherePolar' ? values_info2 = Object.values(divideArrays(info2,info2_tot)) : Object.values(info2);
     var data1 = {
         label: name,
+        data: values_info,
         backgroundColor: function(context) {
             var index = context.dataIndex;
             var value = context.dataset.data[index];
             return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
             Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
-            labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Type graph
-            'rgb(255,0,0,.25)';
+            labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Pack graph
+            'rgb(255,0,0,.1)';
         },
-        borderWidth: ['pie', 'polarArea'].indexOf(type) > -1 ? 2 : 0,
-        borderColor: "#fff",
+        borderWidth: ['pie', 'polarArea'].indexOf(type) > -1 ? 2 :
+        canvas == 'total' ? 1 : 0,
+        borderColor: canvas == 'total' ? "rgb(255,0,0,.5)" : "#fff",
         borderAlign: 'inner',
-        data: values_info,
         order: 2,
     };
     var data2 = {
         label: name2,
+        data: values_info2,
         backgroundColor: function(context) {
             var index = context.dataIndex;
             var value = context.dataset.data[index];
@@ -350,10 +355,10 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         borderWidth: ['pie', 'polarArea'].indexOf(type) > -1 ? 2 : 0,
         borderColor: "#fff",
         borderAlign: 'inner',
-        data: values_info2,
         type: type == 'bar' ? 'line' : type,
         fill: type == 'bar' ? false : true,
         showLine: false,
+        //canvas == 'total'
         lineTension: 0,
         pointStyle: 'circle',
         pointradius: 5,
@@ -363,9 +368,67 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         pointBorderColor: "#fff",
         order: 1,
     };
+    var data3 = {
+        label: name2,
+        data: values_info2,
+        type: type,
+        backgroundColor: function(context) {
+            var index = context.dataIndex;
+            var value = context.dataset.data[index];
+            return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
+            Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
+            labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Type graph
+            canvas == 'total' ? 'rgb(255,0,0,1)' :
+            'rgb(255,0,0,.25)';
+        },
+        borderWidth: ['pie', 'polarArea'].indexOf(type) > -1 ? 2 : 0,
+        borderColor: "#fff",
+        borderAlign: 'inner',
+        fill: type == 'bar' ? true : true,
+        showLine: false,
+        //canvas == 'total'
+        order: 1,
+        datalabels: {
+            labels: {
+                value: {
+                    color: 'white',
+                    font: {
+                        size: 18,
+                    },
+                }
+            }
+        }
+    };
+    var data4 = {
+        label: name,
+        data: values_info,
+        backgroundColor: function(context) {
+            var index = context.dataIndex;
+            var value = context.dataset.data[index];
+            return Object.getOwnPropertyNames(Sphere_colors).includes(labels_info[index]) ? Sphere_colors[labels_info[index]] :    // For Sphere graph
+            Object.getOwnPropertyNames(Type_colors).includes(labels_info[index]) ? Type_colors[labels_info[index]] :    // For Type graph
+            labels_info[0] == 'Core Set' ? Object.values(randomColors(Object.size(labels_info), 0)) : // for Pack graph
+            'rgb(255,0,0,.1)';
+        },
+        borderWidth: ['pie', 'polarArea'].indexOf(type) > -1 ? 2 :
+        canvas == 'total' ? 1 : 0,
+        borderColor: canvas == 'total' ? "rgb(255,0,0,.5)" : "#fff",
+        borderAlign: 'inner',
+        order: 2,
+        datalabels: {
+            labels: {
+                value: {
+                    color: canvas == 'total' ? 'red' : null,
+                    font: {
+                        size: 18,
+                    },
+                }
+            }
+        }
+    };
     var barChartData = {
         labels: labels_info,
-        datasets: isNaN(info2) ? [ data1 ] : [ data1, data2 ],
+        datasets: isNaN(info2) ? [ data1 ] : [ canvas == 'total' ? data4 : data1, canvas == 'total' ? data3 : data2 ],
     };
     var ctx = document.getElementById(canvas).getContext('2d');
     var defaultOptions = {
@@ -401,6 +464,66 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                     return percentage;
                 },
                 color: '#fff',
+                labels: {
+                    value: {
+                        font: {
+                            weight: 'bold'
+                        },
+                    },
+                }
+            }
+        }
+    };
+    var stackedOptions = {
+        responsive: true,
+        legend: {
+            display: false,
+            position: 'bottom',
+            labels: {
+                usePointStyle: true,
+            },
+        },
+        tooltips: {
+            enabled: false,
+            mode: type == 'pie' ? 'dataset' : 'index',
+            intersect: true,
+            position: type == 'pie' ? 'nearest' : 'average',
+        },
+        title: {
+            display: true,
+            text: 'Collection (distinct cards)'
+        },
+        scales: {
+            xAxes: [{
+                stacked: true
+            }],
+            yAxes: [{
+                stacked: false,
+                ticks: {
+                    beginAtZero: true,
+                    stepSize: 100,
+                },
+            }],
+        },
+        plugins: {
+            datalabels: {
+                anchor: type == 'pie' ? 'center' : 'end',
+                align: 'bottom',
+                display: 'auto',
+                textAlign: 'center',
+                formatter: (value, ctx) => {
+                    let sum = 0;
+                    let dataArr = ctx.chart.data.datasets[ctx.datasetIndex].data;
+                    dataArr.map(data => {
+                        sum += data;
+                    });
+                    let percentage = type == 'pie' ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" :
+                    canvas == 'total' ? value+" cards\n"+(value*100 / Cards_Quantity_total).toFixed(1)+"% of the total" :
+                    value;
+                    percentage = value == Cards_Quantity_total ? value + ' cards published' : 'You own ' + value + " cards\n"+(value*100 / Cards_Quantity_total).toFixed(1)+"% of the total";
+                    return percentage;
+                },
+                color: '#000',
             }
         },
     };
@@ -420,11 +543,14 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
             position: type == 'pie' ? 'nearest' : 'average',
             callbacks: {
                 label: function(tooltipItem, data) {
-                    var label = data.labels[tooltipItem.datasetIndex] || '';
+                    var label = data.labels[tooltipItem.index] || '';
+                    label += ': ' + Sphere_Quantity_unique[data.labels[tooltipItem.index]] + ' cards of ' + Sphere_Quantity_unique_total[data.labels[tooltipItem.index]];
+                    /*
                     if (label) {
                         label += ': ';
                     }
                     label += (tooltipItem.yLabel*100).toFixed(1)+"%";
+                    */
                     return label;
                 },
             }
@@ -441,8 +567,8 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                 max: 1,
                 stepSize: 0.1,
                 callback: function(value, index, values) {
-                        return (value*100).toFixed(0)+"%";
-                    },
+                    return (value*100).toFixed(0)+"%";
+                },
             },
         },
         plugins: {
@@ -473,6 +599,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
     var charBar = new Chart(ctx, {
         type: type,
         data: barChartData,
-        options: type == 'polarArea' ? polarOptions : defaultOptions,
+        options: type == 'polarArea' ? polarOptions :
+        canvas == 'total' ? stackedOptions : defaultOptions,
     });
 };
