@@ -443,6 +443,12 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
             mode: type == 'pie' ? 'dataset' : 'index',
             intersect: true,
             position: type == 'pie' ? 'nearest' : 'average',
+            callbacks: {
+                title: function(tooltipItem, data) {
+                    //console.log(data.labels[tooltipItem]);
+                    return type == 'pie' ? data.datasets[tooltipItem[0].datasetIndex].label+':' : tooltipItem[0].xLabel+':';
+                },
+            },
         },
         title: {
             display: false,
@@ -543,7 +549,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
             callbacks: {
                 label: function(tooltipItem, data) {
                     var label = data.labels[tooltipItem.index] || '';
-                    label += ': ' + Sphere_Quantity_unique[data.labels[tooltipItem.index]] + ' cards of ' + Sphere_Quantity_unique_total[data.labels[tooltipItem.index]];
+                    label += ': ' + Sphere_Quantity_unique[data.labels[tooltipItem.index]] + ' of ' + Sphere_Quantity_unique_total[data.labels[tooltipItem.index]];
                     return label;
                 },
             }
