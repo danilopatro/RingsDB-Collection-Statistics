@@ -509,7 +509,8 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         },
         scales: {
             xAxes: [{
-                stacked: true
+                stacked: true,
+                display: false,
             }],
             yAxes: [{
                 stacked: false,
