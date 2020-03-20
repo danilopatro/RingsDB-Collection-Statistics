@@ -386,7 +386,6 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         borderAlign: 'inner',
         fill: type == 'bar' ? true : true,
         showLine: false,
-        //canvas == 'total'
         order: 1,
         datalabels: {
             labels: {
@@ -545,12 +544,6 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                 label: function(tooltipItem, data) {
                     var label = data.labels[tooltipItem.index] || '';
                     label += ': ' + Sphere_Quantity_unique[data.labels[tooltipItem.index]] + ' cards of ' + Sphere_Quantity_unique_total[data.labels[tooltipItem.index]];
-                    /*
-                    if (label) {
-                        label += ': ';
-                    }
-                    label += (tooltipItem.yLabel*100).toFixed(1)+"%";
-                    */
                     return label;
                 },
             }
