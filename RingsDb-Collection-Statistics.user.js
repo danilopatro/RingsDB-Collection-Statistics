@@ -30,7 +30,7 @@ var collection_url = window.location.href.includes('https') ? 'https://www.rings
 
 //var base_url = window.location.hostname
 //var base_url = window.location.hostname.includes('//www.') ? window.location.hostname : 'https://www.'.concat(window.location.hostname)
-var base_url = window.location.hostname.replace('www.','')
+var base_url = 'https://'.concat(window.location.hostname.replace('www.',''))
 //console.log('URL base: '+ base_url);
 var cards_api_url = base_url + '/api/public/cards/';
 var packs_api_url = base_url + '/api/public/packs/';
