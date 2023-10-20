@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDB Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      6
+// @version      7
 // @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
@@ -22,9 +22,19 @@
 // @run-at       document-idle
 // ==/UserScript==
 
-var cards_api_url = 'https://www.ringsdb.com/api/public/cards/';
-var packs_api_url = 'https://www.ringsdb.com/api/public/packs/';
-var collection_url = 'https://www.ringsdb.com/collection/packs';
+/*
+var cards_api_url = window.location.href.includes('https') ? 'https://www.ringsdb.com/api/public/cards/' : 'http://www.ringsdb.com/api/public/cards/';
+var packs_api_url = window.location.href.includes('https') ? 'https://www.ringsdb.com/api/public/packs/' : 'http://www.ringsdb.com/api/public/packs/';
+var collection_url = window.location.href.includes('https') ? 'https://www.ringsdb.com/collection/packs' : 'http://www.ringsdb.com/collection/packs';
+*/
+
+//var base_url = window.location.hostname
+//var base_url = window.location.hostname.includes('//www.') ? window.location.hostname : 'https://www.'.concat(window.location.hostname)
+var base_url = window.location.hostname.replace('www.','')
+//console.log('URL base: '+ base_url);
+var cards_api_url = base_url + '/api/public/cards/';
+var packs_api_url = base_url + '/api/public/packs/';
+var collection_url = base_url + '/collection/packs';
 
 var Cards = new Array();
 var Sets = new Array();
@@ -98,8 +108,19 @@ var getHTML = function ( url, callback ) {
     }
 
     // Get the HTML
+    //console.log(window.location);
+    //console.log('Connection function getHTML:');
     xhr.open( 'GET', url );
-    xhr.responseType = 'document';
+    xhr.setRequestHeader('Access-Control-Allow-Credentials', 'true');
+    xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+    xhr.setRequestHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    xhr.setRequestHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
+    //xhr.setRequestHeader('X-PINGOTHER', 'pingpong');
+    //xhr.setRequestHeader('Access-Control-Request-Method', 'GET');
+    //xhr.setRequestHeader('Access-Control-Request-Headers', 'text/html');
+    //xhr.setRequestHeader("X-PINGOTHER", "pingpong");
+    //xhr.setRequestHeader("Content-Type", "text/xml");
+    //xhr.responseType = 'document';
     xhr.send();
 
 };
