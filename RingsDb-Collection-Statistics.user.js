@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         RingsDB Collection Statistics
 // @namespace    http://tampermonkey.net/
-// @version      7
+// @version      8
 // @description  Generate information (table and graphs) about your collection informed at RingsDB.com.
 // @author       Danilo
 // @copyright    2020, Danilo (https://github.com/danilopatro)
@@ -15,9 +15,8 @@
 // @grant        GM_addStyle
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require      https://code.jquery.com/ui/1.12.1/jquery-ui.js
-// @require      https://www.chartjs.org/samples/latest/utils.js
-// @require      https://www.chartjs.org/dist/2.9.3/Chart.min.js
-// @require      https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels
+// @require      https://cdn.jsdelivr.net/npm/chart.js@3.0.0/dist/chart.min.js
+// @require      https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0
 // @resource     jqueryCSS https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css
 // @run-at       document-idle
 // ==/UserScript==
@@ -67,12 +66,13 @@ var Sphere_symbols = {Tactics: '<span class="icon icon-tactics fg-tactics"></spa
                       Baggins: '<span class="icon icon-baggins fg-baggins"></span>',
                       Fellowship: '<span class="icon icon-fellowship fg-fellowship"></span>'};
 
-var Type_colors = {Hero: '#dc9336', Ally: '#b15553', Event: '#509aaf', Attachment: '#77ad52', 'Player Side Quest': '#878a75', Treasure: '#c4c23b'};
+var Type_colors = {Hero: '#dc9336', Ally: '#b15553', Event: '#509aaf', Attachment: '#77ad52', 'Player Side Quest': '#878a75', Treasure: '#c4c23b', Campaign: '#a1e3ff', Contract: '#3f1e66'};
 
 
 var newCSS = GM_getResourceText ("jqueryCSS");
 GM_addStyle (newCSS);
-GM_addStyle("#base {  width: 100%; height: 100%; display: none; }");
+//GM_addStyle("#base {  width: 100%; height: 100%; display: none; }");
+GM_addStyle("#base {  width: 100%; height: 100%; }");
 GM_addStyle(".table_canvas {  width: 100%; border-collapse:separate; border-spacing: 10px 15px; }");
 GM_addStyle(".table_canvas td {  width: 50%; }");
 GM_addStyle(".table_canvas th {  padding: 5px; text-align: center; font-size: 15px; background-color: #eee; width: 33%; ; border-collapse:separate; border: 1px solid #DDD; -webkit-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); -moz-box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75); box-shadow: 3px 3px 10px -5px rgba(0,0,0,0.75);}");
@@ -127,7 +127,7 @@ var getHTML = function ( url, callback ) {
 
 function criaDIV(stringCollection){
     var html_corpo = " \
-<TABLE class='table_cards'>"+generateTable(Sphere_Quantity_unique, Sphere_Quantity)+"</TABLE> \
+<TABLE class='table_cards'>"+generateTable(Sphere_Quantity_unique, Sphere_Quantity)+ "</TABLE> \
 <br><button style='padding: 4px;' onclick=\"$(\'#base\').toggle()\">Show/Hide Charts</button><br><br> \
 <div id='base' > \
 <TABLE class='table_canvas'> \
@@ -355,7 +355,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
     var values_info = canvas == 'spherePolar' ? Object.values(divideArrays(info,info_tot)) : Object.values(info);
     var values_info2 = canvas == 'spherePolar' ? values_info2 = Object.values(divideArrays(info2,info2_tot)) : Object.values(info2);
     var data1 = {
-        label: name,
+        labels: name,
         data: values_info,
         backgroundColor: function(context) {
             var index = context.dataIndex;
@@ -372,7 +372,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         order: 2,
     };
     var data2 = {
-        label: name2,
+        labels: name2,
         data: values_info2,
         backgroundColor: function(context) {
             var index = context.dataIndex;
@@ -390,16 +390,16 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         showLine: false,
         //canvas == 'total'
         lineTension: 0,
-        pointStyle: 'circle',
-        pointradius: 5,
-        pointHoverRadius: 15,
-        pointBorderWidth: 1,
-        pointHoverBorderWidth: 2,
+        pointStyle: 'dash',
+        pointradius: 0,
+        pointHoverRadius: 0,
+        pointBorderWidth: 0,
+        pointHoverBorderWidth: 0,
         pointBorderColor: "#fff",
         order: 1,
     };
     var data3 = {
-        label: name2,
+        labels: name2,
         data: values_info2,
         type: type,
         backgroundColor: function(context) {
@@ -429,7 +429,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         }
     };
     var data4 = {
-        label: name,
+        labels: name,
         data: values_info,
         backgroundColor: function(context) {
             var index = context.dataIndex;
@@ -445,14 +445,10 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
         borderAlign: 'inner',
         order: 2,
         datalabels: {
-            labels: {
-                value: {
-                    color: canvas == 'total' ? 'red' : null,
-                    font: {
-                        size: 18,
-                    },
-                }
-            }
+            color: canvas == 'total' ? 'red' : null,
+            font: {
+                size: 18,
+            },
         }
     };
     var barChartData = {
@@ -462,29 +458,29 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
     var ctx = document.getElementById(canvas).getContext('2d');
     var defaultOptions = {
         responsive: true,
-        legend: {
-            display: false,
-            position: 'bottom',
-            labels: {
-                usePointStyle: true,
-            },
-        },
         tooltips: {
             mode: type == 'pie' ? 'dataset' : 'index',
             intersect: true,
             position: type == 'pie' ? 'nearest' : 'average',
             callbacks: {
                 title: function(tooltipItem, data) {
-                    //console.log(data.labels[tooltipItem]);
+                    console.log(data.labels[tooltipItem]);
                     return type == 'pie' ? data.datasets[tooltipItem[0].datasetIndex].label+':' : tooltipItem[0].xLabel+':';
                 },
             },
         },
-        title: {
-            display: false,
-            text: name+' Chart'
-        },
         plugins: {
+            title: {
+                display: true,
+                text: name +' Chart'
+            },
+            legend: {
+                display: false,
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                },
+            },
             datalabels: {
                 anchor: type == 'pie' ? 'center' : 'end',
                 align: 'bottom',
@@ -511,37 +507,37 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
     };
     var stackedOptions = {
         responsive: true,
-        legend: {
-            display: false,
-            position: 'bottom',
-            labels: {
-                usePointStyle: true,
-            },
-        },
         tooltips: {
             enabled: false,
             mode: type == 'pie' ? 'dataset' : 'index',
             intersect: true,
             position: type == 'pie' ? 'nearest' : 'average',
         },
-        title: {
-            display: true,
-            text: 'Collection (distinct cards)'
-        },
         scales: {
-            xAxes: [{
+            x: {
                 stacked: true,
                 display: false,
-            }],
-            yAxes: [{
+            },
+            y: {
                 stacked: false,
                 ticks: {
                     beginAtZero: true,
                     stepSize: 100,
                 },
-            }],
+            },
         },
         plugins: {
+            title: {
+                display: true,
+                text: 'Collection (distinct cards)'
+            },
+            legend: {
+                display: false,
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                },
+            },
             datalabels: {
                 anchor: type == 'pie' ? 'center' : 'end',
                 align: 'bottom',
@@ -556,7 +552,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                     let percentage = type == 'pie' ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" :
                     canvas == 'total' ? value+" cards\n"+(value*100 / Cards_Quantity_unique_total).toFixed(1)+"% of the total" :
                     value;
-                    percentage = value == Cards_Quantity_unique_total ? value + ' cards published' : 'You own ' + value + " cards\n"+(value*100 / Cards_Quantity_unique_total).toFixed(1)+"% of the total";
+                    percentage = value == Cards_Quantity_unique_total ? value + ' cards published' : 'You own ' + value + " cards\n" + (value*100 / Cards_Quantity_unique_total).toFixed(1) + "% of the total";
                     return percentage;
                 },
                 color: '#000',
@@ -565,14 +561,6 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
     };
     var polarOptions = {
         responsive: true,
-        legend: {
-            display: true,
-            position: 'right',
-            labels: {
-                usePointStyle: true,
-            },
-            onClick: null,
-        },
         tooltips: {
             mode: type == 'pie' ? 'dataset' : 'index',
             intersect: true,
@@ -584,10 +572,6 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                     return label;
                 },
             }
-        },
-        title: {
-            display: true,
-            text: 'Percent of '+name+' in the Collection in relation to those published by Sphere'
         },
         scale: {
             angleLines: {
@@ -602,6 +586,18 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
             },
         },
         plugins: {
+            title: {
+                display: true,
+                text: 'Percent of '+name+' in the Collection in relation to those published by Sphere'
+            },
+            legend: {
+                display: true,
+                position: 'right',
+                labels: {
+                    usePointStyle: true,
+                },
+                onClick: null,
+            },
             datalabels: {
                 anchor: ['pie'].indexOf(type) > -1 ? 'center' :
                 ['polarArea'].indexOf(type) > -1 ? 'end' :
@@ -618,7 +614,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
                         sum += data;
                     });
                     let percentage = ['pie'].indexOf(type) > -1 ? labels_info[ctx.dataIndex]+"\n"+(value*100 / sum).toFixed(1)+"%" : // For Pie graph
-                    ['polarArea'].indexOf(type) > -1 ? (value*100).toFixed(1)+"%" :    // For Polar Area graph
+                    ['polarArea'].indexOf(type) > -1 ? (value*100).toFixed(1)+"%" : // For Polar Area graph
                     value;
                     return percentage;
                 },
@@ -629,6 +625,7 @@ function geraChart(info, name, canvas, type = 'bar', info2 = info, name2 = name,
     var charBar = new Chart(ctx, {
         type: type,
         data: barChartData,
+        plugins: [ChartDataLabels],
         options: type == 'polarArea' ? polarOptions :
         canvas == 'total' ? stackedOptions : defaultOptions,
     });
